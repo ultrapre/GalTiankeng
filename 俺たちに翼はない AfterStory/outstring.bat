@@ -1,0 +1,1 @@
+for %%a in (*.tob) do tobRead.exe %%a>>%%a.txt
