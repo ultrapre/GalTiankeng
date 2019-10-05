@@ -1,0 +1,1 @@
+for %%a in (*.sob) do sobRead.exe %%a>>%%a.txt
