@@ -1,0 +1,1 @@
+for %%a in (*.cst) do cstTextProc.exe -e -cst %%a -o %%a.txt -cp 932
