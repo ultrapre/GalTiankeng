@@ -1,0 +1,1 @@
+for %%a in (*.mjo) do mjcrypt.exe %%a
