@@ -1,0 +1,1 @@
+for %%a in (*.afs) do %~nx1 %%a

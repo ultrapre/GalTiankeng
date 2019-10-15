@@ -1,313 +1,205 @@
-暂时没有找到解密解包办法。
+---
+title: 如何破解最果てのイマ
+date: 2019-10-15 19:09:14
+tags:
+---
+
+# 如何破解最果てのイマ
+
+how to extract / depack / unpack Saihate no Ima?
+
+参考到这条残念的[不能解包的记录](<https://blog.ztjal.info/acg/acg-data/galgame-can-not-unpack-record> )
+
+我燃起了无论如何也要找到解包最果的办法。作为伪田中厨子，怎么能不去了解一下这个仅次于樱之诗的“汉化天坑”&&“日语白学”巨作呢？
+
+为什么我知道已经有解包前例了？第一，Famille曾经接手说明肯定能解。
+
+其次在VN STATs 中有这条记录。
 
 
 
-PSP版本可能的FileStruct：（可以crass解包，但是我没能解密mac.afs这个很可能是剧本的文件）
+| Game title     | Developer | Game engine | [VNDB                                                        | Unique kanji | Line count | MB size | Writer       |
+| -------------- | --------- | ----------- | ------------------------------------------------------------ | ------------ | ---------- | ------- | ------------ |
+| Saihate no Ima | Xuse      |             | [vndb](https://web.archive.org/web/20170708071728/http://vndb.org/v1278) | 2578         |            | 1.84    | Tanaka Romeo |
+
+可以见到Engine这行是空的，很恶心。
+
+
+
+废话不多说，谈谈解包方法。
+
+我的目标是拿到文本而不是完全汉化封包，所以我绕过PC版引擎的奇特，使用PSP版本`最果てのイマ PORTABLE`解决。
+
+脚本在`"Q:\PSP_GAME\USRDIR\mac.afs"`中，使用crass可以解包出如下文件：
 
 ```
-voice.afs
-bg.afs
-bgm.afs
-chr.afs
-etc.afs
-ev.afs
-file.dir
-init.bin
-mac.afs
-se.afs
+a_boot.BIP
+a_cmn_00.BIP
+a_epl_00.BIP
+a_epl_01.BIP
+a_epl_02.BIP
+a_epl_03.BIP
+a_prl_01.BIP
+a_prl_02.BIP
+...
 ```
 
-解包的剧本文件：
+你也可以使用AFSExplorer或者exafs.exe或者<https://github.com/dreambottle/R11-psp-english/blob/master/unpack-afs.sh> 
+
+针对*.bip，可以使用以下代码解开，这个地址是我使用谷歌`PSP "afs" "t2p"`才搜索到的：
+
+<https://github.com/dreambottle/R11-psp-english/blob/master/src/decompressbip.c> 
+
+另外，还有一个类似的PSP项目也可以研读：<https://github.com/uyjulian/e17p#formats-and-parsers-remember11> 
+
+我使用的是Ubuntu14.04，`gcc -o exbip decompressbip.c lzss.c`
+
+生成exbip
+
+然后新建一个`run.sh`:
+
+```shell
+for line in `cat file.txt`
+do
+echo $line
+exbip bip/$line $line.txt
+done
+```
+
+然后新建一个file.txt，写入所有的bip文件:
 
 ```
-0016_CHAPTER00.BIP
-0017_CHAPTER01.BIP
-0018_CHAPTER02.BIP
-0019_CHAPTER03.BIP
-0020_CHAPTER04.BIP
+a_boot.BIP
+a_cmn_00.BIP
+a_epl_00.BIP
+a_epl_01.BIP
+a_epl_02.BIP
+a_epl_03.BIP
+a_prl_01.BIP
+a_prl_02.BIP
+...
+```
+
+将所有的*.bip文件放入bip文件夹中，然后修改执行权限，执行run.sh
+
+得到的*.txt文件，其中a_wr1_01.BIP.txt显示如下：
+
+```d
+Offset      0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F
+
+000022A0   01 00 00 00 FF FF FF 23  FF FF FF FF 01 00 00 00       #    
+000022B0   FF 7F 00 00 FF 7F 00 00  00 00 00 00 00 00 00 18                 
+000022C0   00 00 00 00 1E 00 00 00  00 00 00 00 00 00 00 00                   
+000022D0   6E 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   n               
+000022E0   FF FF FF FF FF FF FF FF  FF FF FF FF FF FF FF FF   
+000022F0   82 BB 82 B5 82 C4 94 45  82 CD 81 41 91 90 8C B4   そして忍は A?原
+00002300   82 C9 98 C8 82 F1 82 C5  82 A2 82 BD 81 42 25 4B   に佇んでいた B%K
+00002310   25 50 00 89 F9 82 A9 82  B5 82 A2 8F EA 8F 8A 82   %P 懐かしい ?鰍
+00002320   BE 81 42 25 4E 82 A2 82  AD 82 C2 82 A9 82 CC 8E   ?B%Nいくつかの?
+00002330   76 82 A2 8F 6F 82 AA 82  A0 82 E9 81 42 25 4B 25   vい oがある B%K%
+00002340   50 00 82 BD 82 C6 82 A6  82 CE 95 97 82 F0 8E E8   P たとえば風を手
+00002350   8C 4A 82 E9 8F 70 82 F0  8A 6F 82 A6 82 BD 82 CC   繰る pを覚えたの
+
+```
+
+可以看到，几乎所有txt都是这样子，前面为索引，后面为shift-jis表示的日文明文，由于我只需要文本，暂时不考虑封包，，而且由于我程序渣，所以直接抽取文本，方法是循环读取8字节，如果结果是`b'\xff\xff\xff\xff\xff\xff\xff\xff'`，而且下面的8个也是`b'\xff\xff\xff\xff\xff\xff\xff\xff'`，然后就标记写入日文，并且去掉其中的`'\x00'`，而且把`b"\x25\x4B\x25\x50"`也就是`%K%P`以及`b"\x25\x4E"`也就是`%N`替换为`b"\x0D\x0A"`也就是`\n`。
+
+批量编程的方法如下：
+
+```python
+srcdir = "M:/PSP/run/text-TST/1.bip.txt"
+outfile = os.path.split(src)[0] + "-Out/" + os.path.split(src)[1]
+totalsize = os.path.getsize(src)
+fp = open(outfile, "wb") #, encoding="utf-8")
+size = 0
+flag = 0
+with open(src, "rb") as f:
+    while size < totalsize:
+        a = f.read(8)
+        size += 8
+        if a == b'\xff\xff\xff\xff\xff\xff\xff\xff':
+            a = f.read(8)
+            size += 8
+            if a == b'\xff\xff\xff\xff\xff\xff\xff\xff':
+                flag = 1
+        if flag == 1:
+            a = f.read(totalsize - size)
+            size = totalsize
+            a = a.replace(b"\x00", b"").replace(b"\x25\x4B\x25\x50", b"\x0D\x0A").replace(b"\x25\x4E", b"\x0D\x0A")
+            fp.write(a)
+fp.close()
+```
+
+剩余的如下文本单独处理：
+
+```
+CHAPTER00.BIP.txt
+CHAPTER01.BIP.txt
+CHAPTER02.BIP.txt
+CHAPTER03.BIP.txt
+CHAPTER04.BIP.txt
+CHAPTER05.BIP.txt
+CHAPTER06.BIP.txt
+CHAPTER07.BIP.txt
+CHAPTER08.BIP.txt
+SHORTCUT.BIP.txt
+```
+
+
+
+最终得到如下文本：
+
+```
+そして忍は、草原に佇んでいた。
+懐かしい場所だ。
+いくつかの思い出がある。
 ……
 ```
 
+翻译即可完成。
 
+---
 
-最果てのイマ COMPLETE的结构类似フルボイス版。根据[乜都讲D的说法](<https://blog.ztjal.info/acg/acg-data/galgame-can-not-unpack-record> )，他也没能解包。
+# 走过的弯路（其实是我菜）
 
+**针对PC版：**
 
-
-フルボイス版的FileStruct:
+PC版有以下文件类型：
 
 ```
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0000.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0001.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0002.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0003.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0004.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0005.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0006.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0007.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0008.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0009.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0010.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0011.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0012.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0013.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0014.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0015.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0016.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0017.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0018.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0019.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0020.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0021.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0022.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0023.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0024.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0025.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0026.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0027.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0028.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0029.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0030.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0031.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0032.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0033.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0034.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0035.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0036.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0037.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0038.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0039.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0040.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0041.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0042.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0043.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0044.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0045.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0046.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0047.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0048.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0049.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0050.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0051.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0052.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0053.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0054.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0055.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0056.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0057.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0058.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0059.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0060.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0061.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0062.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0063.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0064.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0065.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0066.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0067.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0068.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0069.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0070.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0071.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0072.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0073.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0074.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0075.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0076.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0077.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0078.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0079.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0080.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0081.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0082.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0083.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0084.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0085.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0086.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0087.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0088.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0089.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0090.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0091.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0092.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0093.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0094.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0095.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0096.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0097.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0098.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0099.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0100.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0101.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0102.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0103.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0104.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0105.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0106.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0107.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0108.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0109.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0110.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0111.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0112.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0113.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0114.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0115.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0116.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0117.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0118.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0119.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0120.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0121.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0122.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0123.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0124.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0125.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0126.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0127.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0128.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0129.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0130.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0131.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0132.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0133.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0134.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0135.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0136.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0137.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0138.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0139.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0140.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0141.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0142.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0143.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0144.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0145.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0146.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0147.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0148.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0149.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0150.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0151.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0152.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0153.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0154.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0155.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0156.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0157.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\0158.cd"
-"G:\Gal\最果てのイマ-フルボイス版\HD\CDFiles\1.cd"
-"G:\Gal\最果てのイマ-フルボイス版\banner.bmp"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0000.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0001.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0002.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0003.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0004.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0005.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0006.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0007.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bg0008.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bm0000.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0000.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0001.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0002.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0003.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0004.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0005.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0006.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0007.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0008.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0009.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0010.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\bu0011.004"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0000.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0001.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0002.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0003.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0004.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0005.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0006.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0007.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0008.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0009.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0010.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0011.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0012.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0013.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0014.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0015.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0016.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0017.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0018.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0019.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0020.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0021.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0022.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0023.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0024.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0025.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0026.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0027.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0028.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0029.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0030.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0031.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0032.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0033.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0034.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0035.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0036.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0037.dat"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0037.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0038.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0039.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0040.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0041.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0042.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0043.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0044.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0045.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0046.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0047.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0048.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0049.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0050.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0051.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0052.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0053.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0054.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0055.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0056.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0057.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0058.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\CD\bv0059.xsa"
-"G:\Gal\最果てのイマ-フルボイス版\HD\cgv.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\env.arc"
-"G:\Gal\最果てのイマ-フルボイス版\Farthest2015_patched.exe"
-"G:\Gal\最果てのイマ-フルボイス版\Farthest_vo.exe"
-"G:\Gal\最果てのイマ-フルボイス版\Farthest_vo.log"
-"G:\Gal\最果てのイマ-フルボイス版\Farthest_vo_nodvd.exe"
-"G:\Gal\最果てのイマ-フルボイス版\HD\fx.arc"
-"G:\Gal\最果てのイマ-フルボイス版\HD\gd.arc"
-"G:\Gal\最果てのイマ-フルボイス版\install.ini"
-"G:\Gal\最果てのイマ-フルボイス版\HD\jopzdll.dll"
-"G:\Gal\最果てのイマ-フルボイス版\HD\k0000.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\k0001.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\LensFlare.004"
-"G:\Gal\最果てのイマ-フルボイス版\HD\mask.arc"
-"G:\Gal\最果てのイマ-フルボイス版\HD\mv0000.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\mv0001.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\mv0002.bin"
-"G:\Gal\最果てのイマ-フルボイス版\HD\pal.arc"
-"G:\Gal\最果てのイマ-フルボイス版\HD\silent.bin"
-"G:\Gal\最果てのイマ-フルボイス版\UnInst.dat"
-"G:\Gal\最果てのイマ-フルボイス版\HD\wnd.arc"
-"G:\Gal\最果てのイマ-フルボイス版\HD\wss.bin"
-"G:\Gal\最果てのイマ-フルボイス版\Xuse.url"
-"G:\Gal\最果てのイマ-フルボイス版\Xuse_Inst.exe"
-"G:\Gal\最果てのイマ-フルボイス版\HD\zpkc.bin"
-"G:\Gal\最果てのイマ-フルボイス版\お読み下さい.txt"
-"G:\Gal\最果てのイマ-フルボイス版\ヘルプ.chm"
+*.bin *.004 *.arc *.cd *.xsa
 ```
+
+用我收集的解包库用everything搜索一遍上面的后缀名，然后试验
+
+例如chinesize中的Xuse，由于找不到`strfile`是什么鬼模块只好放弃
+
+```
+chinesize
+Fragment-master
+FuckGalEngine
+gal_tools
+galgame解包
+GALgame解压工具大全
+```
+
+在我剪藏的网页文件夹中搜索一遍上面的后缀名，然后试验
+
+crass用Xuse参数试了所有一遍（可以解出很小一部分）；
+
+asmodean tools找出所有可以解*.arc的，然后对arc全试一遍。
+
+搜索“saihate no ima”+“unpack”/“extract”等等变着方法搜索。
+
+得知厂商为Xuse和Cyberfront，搜索其解包方法。
+
+用https://blog.ztjal.info/里面包含Xuse的方法全试一遍。
+
+尝试通过VN stats的[https://vnscripts.neocities.org](https://vnscripts.neocities.org/) 或者http://wiki.wareya.moe/Stats找到别人拿到的文本
+
+联系曾经接手的Famille组，然后联系到Azure前辈，但是由于其太忙没时间翻记录。
+
+**针对PSP版：**
+
+根据网上随处可见的教程尝试使用WQSG解决bip文件或者afs文件。
 
