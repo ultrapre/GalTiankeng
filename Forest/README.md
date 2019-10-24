@@ -13,3 +13,9 @@ crass 解包scr.xfl得到gsc剧本
 ---
 
 批量最好。然而我一开始找到的是汇编半成品lnedit.exe ，我还对代码进行了修改……
+
+---
+
+exe破解小记：
+
+很简单，在CreateFontA下断点，然后把CHARSET从x80改成x86即可
