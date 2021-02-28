@@ -1,0 +1,1 @@
+for %%a in (*.cst) do cst.exe -p -cst %%a -txt text/%%~na.txt -o cst/%%a -cp 936
