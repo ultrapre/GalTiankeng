@@ -1,4 +1,5 @@
 # GalgameTiankeng
+
 樱之诗、最果、Forest、俺翼、灰色、神树之馆、霞外笼等日语白学Galgame汉化天坑的机翻教程和文本
 
 重要的事说三遍：
